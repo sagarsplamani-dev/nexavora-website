@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const leadSchema = new mongoose.Schema({
+  submissionId: { type: String, unique: true, sparse: true, index: true },
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, trim: true, lowercase: true },
   phone: { type: String, required: true },

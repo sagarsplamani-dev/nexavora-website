@@ -27,3 +27,9 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: AI_API_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        sync: false

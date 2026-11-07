@@ -45,6 +45,20 @@ try {
     assert.equal(response.status, 400, `${route} should reject an empty body.`);
   }
 
+  const invalidChatResponse = await fetch(`${baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [] }),
+  });
+  assert.equal(invalidChatResponse.status, 400, 'Chat should reject an empty message list.');
+
+  const unconfiguredChatResponse = await fetch(`${baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [{ role: 'user', content: 'Hello' }] }),
+  });
+  assert.equal(unconfiguredChatResponse.status, 503, 'Chat should explain missing AI configuration.');
+
   const leadCourseResponse = await fetch(`${baseUrl}/api/leads`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

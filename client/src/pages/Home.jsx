@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Activity,
@@ -40,7 +40,7 @@ import {
   YAxis,
 } from 'recharts';
 import { submitForm } from '../services/api';
-import { phoneDisplay, phoneHref, whatsappHref } from '../utils/contact';
+import { mapsHref, phoneDisplay, phoneHref, whatsappHref } from '../utils/contact';
 import { downloadSyllabus } from '../utils/syllabus';
 const DataScienceSection = lazy(() => import('../sections/DataScienceSection'));
 
@@ -491,6 +491,7 @@ function Hero() {
 
 function LeadForm() {
   const [message, setMessage] = useState(null);
+  const submissionId = useRef(crypto.randomUUID());
   const {
     register,
     handleSubmit,
@@ -509,12 +510,13 @@ function LeadForm() {
   const submit = async (data) => {
     if (data.website) return;
     try {
-      const result = await submitForm('/leads', data);
+      const result = await submitForm('/leads', { ...data, submissionId: submissionId.current });
       setMessage([
         'success',
         result.message || 'Request received. Our advisor will contact you soon.',
       ]);
       reset();
+      submissionId.current = crypto.randomUUID();
     } catch (e) {
       setMessage(['error', e.message]);
     }
@@ -1149,61 +1151,33 @@ function Widgets({ callback }) {
       text: 'Hi there! Ask about either course, the curriculum, or career support.',
     },
   ]);
-  const answerFor = (question) => {
-    const text = question.toLowerCase();
-    if (text.includes('data science') || text.includes('machine learning') || text.includes('ml')) {
-      return 'Data Science is a separate course covering Python, NumPy, Pandas, SQL, machine learning, NLP, deep learning, computer vision, Generative AI, Agentic AI, Git, GitHub, and GitLab. Use the Data Science course link to explore its modules.';
-    }
-    if (text.includes('data analytics') || text.includes('analytics')) {
-      return 'Data Analytics remains a separate course. Its existing section covers Excel, SQL, Python, data visualization, Power BI, Tableau, and analytics projects.';
-    }
-    if (text.includes('sql') || text.includes('database')) {
-      return 'The Data Science SQL module includes database fundamentals, DDL/DML/DQL, SELECT queries, filtering, joins, aggregates, subqueries, CTEs, window functions, and connecting SQL with Python.';
-    }
-    if (text.includes('python') || text.includes('pandas') || text.includes('numpy')) {
-      return 'The Python module covers Python for Data Science, NumPy, Pandas, cleaning, manipulation, preprocessing, EDA, and visualization.';
-    }
-    if (text.includes('nlp') || text.includes('language')) {
-      return 'The NLP module covers text preprocessing, tokenization, text classification, and sentiment analysis.';
-    }
-    if (text.includes('vision') || text.includes('image')) {
-      return 'The Computer Vision module introduces image processing, image classification, and object detection.';
-    }
-    if (
-      text.includes('generative') ||
-      text.includes('agent') ||
-      text.includes('rag') ||
-      text.includes('llm')
-    ) {
-      return 'The AI modules cover Generative AI, LLMs, prompt engineering, RAG, AI applications, Agentic AI, agents, workflows, and automation.';
-    }
-    if (
-      text.includes('internship') ||
-      text.includes('certificate') ||
-      text.includes('certification') ||
-      text.includes('placement')
-    ) {
-      return 'Internship availability, certificate requirements, and career-support details must be confirmed with Nexavora. Career guidance is not a job or placement guarantee.';
-    }
-    if (
-      text.includes('fee') ||
-      text.includes('price') ||
-      text.includes('schedule') ||
-      text.includes('timing')
-    ) {
-      return 'Current fees and schedules are not published here. Please call the course team or request a callback for verified details.';
-    }
-    return 'I can answer general questions about Data Science, Data Analytics, SQL, Python, machine learning, AI topics, projects, and career support. For current course availability, call or request a callback.';
-  };
-  const sendChatMessage = (value) => {
+  const [chatError, setChatError] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const sendChatMessage = async (value) => {
     const text = value.trim();
-    if (!text) return;
-    setChatMessages((messages) => [
-      ...messages,
-      { id: `${Date.now()}-user`, sender: 'user', text },
-      { id: `${Date.now()}-assistant`, sender: 'assistant', text: answerFor(text) },
-    ]);
+    if (!text || chatLoading) return;
+    const userMessage = { id: `${Date.now()}-user`, sender: 'user', text };
+    const nextMessages = [...chatMessages, userMessage];
+    setChatMessages(nextMessages);
     setDraft('');
+    setChatError('');
+    setChatLoading(true);
+    try {
+      const result = await submitForm('/chat', {
+        messages: nextMessages.map(({ sender, text: message }) => ({
+          role: sender === 'user' ? 'user' : 'assistant',
+          content: message,
+        })),
+      });
+      setChatMessages((messages) => [
+        ...messages,
+        { id: `${Date.now()}-assistant`, sender: 'assistant', text: result.message },
+      ]);
+    } catch (error) {
+      setChatError(error.message);
+    } finally {
+      setChatLoading(false);
+    }
   };
   const submitChat = (event) => {
     event.preventDefault();
@@ -1219,6 +1193,11 @@ function Widgets({ callback }) {
         <br />
         <b>Support</b>
       </a>
+      {mapsHref && (
+        <a className="location-link" href={mapsHref} target="_blank" rel="noreferrer">
+          We Are Here
+        </a>
+      )}
       <button
         className="chat-launch"
         onClick={() => setChat(!chat)}
@@ -1281,9 +1260,10 @@ function Widgets({ callback }) {
               maxLength={500}
             />
             <button type="submit" disabled={!draft.trim()} aria-label="Send message">
-              <Send size={17} />
+              {chatLoading ? '...' : <Send size={17} />}
             </button>
           </form>
+          {chatError && <small className="notice error">{chatError}</small>}
           <small className="chat-disclaimer">
             For confirmed fees, schedules, or availability, contact the course team.
           </small>

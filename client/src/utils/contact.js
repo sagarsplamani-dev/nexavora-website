@@ -7,3 +7,4 @@ export const phoneHref = `tel:${phoneDigits}`;
 export const whatsappHref = whatsappDigits
   ? `https://wa.me/${whatsappDigits}?text=${defaultMessage}`
   : '';
+export const mapsHref = (import.meta.env.VITE_MAPS_URL || '').trim();

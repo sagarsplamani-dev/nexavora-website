@@ -22,6 +22,7 @@ import {
   Users,
 } from 'lucide-react';
 import { downloadDataScienceSyllabus } from '../utils/syllabus';
+import { phoneHref } from '../utils/contact';
 
 const ecosystemNodes = [
   ['Machine Learning', 'ML', LineChart, 'node-ml'],
@@ -423,7 +424,7 @@ export default function DataScienceSection() {
             </li>
           </ul>
           <div className="ds-hero-actions">
-            <a className="button primary" href="tel:9686712017">
+            <a className="button primary" href={phoneHref}>
               <Phone size={17} /> Call Us
             </a>
             <button className="button outline" onClick={downloadDataScienceSyllabus}>

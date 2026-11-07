@@ -5,7 +5,7 @@ import { sendMail } from '../utils/mailer.js';
 
 export const createLead = async (req, res) => {
   try {
-    const { name, email, phone, pinCode, course, message, website } = req.body || {};
+    const { name, email, phone, pinCode, course, message, website, submissionId } = req.body || {};
     if (website) return res.status(202).json({ message: 'Request received.' });
     if (![name, email, phone, course].every((value) => typeof value === 'string' && value.trim())) {
       return res.status(400).json({ error: 'Name, email, phone, and course are required.' });
@@ -22,7 +22,11 @@ export const createLead = async (req, res) => {
     if (pinCode && !validator.isPostalCode(pinCode, 'IN')) {
       return res.status(400).json({ error: 'Invalid PIN code.' });
     }
+    if (submissionId && (typeof submissionId !== 'string' || !/^[a-zA-Z0-9-]{16,100}$/.test(submissionId))) {
+      return res.status(400).json({ error: 'Invalid submission identifier.' });
+    }
     const sanitized = {
+      submissionId: submissionId || undefined,
       name: validator.trim(validator.stripLow(name)).slice(0, 80),
       email: validator.normalizeEmail(email),
       phone: normalizedPhone,
@@ -35,7 +39,14 @@ export const createLead = async (req, res) => {
       return res.status(503).json({ error: 'Course submissions are unavailable because the database is not connected.' });
     }
     const lead = new Lead(sanitized);
-    await lead.save();
+    try {
+      await lead.save();
+    } catch (error) {
+      if (error?.code === 11000 && submissionId) {
+        return res.status(200).json({ message: 'This request was already received.' });
+      }
+      throw error;
+    }
     const safeName = validator.escape(sanitized.name);
     const safeCourse = validator.escape(sanitized.course);
     const safeMessage = validator.escape(sanitized.message);
