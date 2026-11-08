@@ -10,6 +10,7 @@ import leadRoutes from './routes/leadRoutes.js';
 import demoBookingRoutes from './routes/demoBookingRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
 
 const rootEnv = resolve(dirname(fileURLToPath(import.meta.url)), '../../.env');
 dotenv.config({ path: process.env.ENV_FILE || rootEnv });
@@ -60,6 +61,7 @@ app.use('/api/demo-bookings', demoBookingRoutes);
 app.use('/api/contact', contactMessageRoutes);
 app.use('/api/contact-messages', contactMessageRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/courses', courseRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'Route not found.' }));
 app.use((error, req, res, next) => {

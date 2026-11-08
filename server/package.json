@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test:api": "node scripts/api-smoke-test.js"
+    "test:api": "node scripts/api-smoke-test.js",
+    "seed:courses": "node scripts/seed-courses.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

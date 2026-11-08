@@ -39,7 +39,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { submitForm } from '../services/api';
+import { getJson, submitForm } from '../services/api';
 import { emailDisplay, emailHref, mapsHref, phoneDisplay, phoneHref, whatsappHref } from '../utils/contact';
 import { downloadSyllabus } from '../utils/syllabus';
 const DataScienceSection = lazy(() => import('../sections/DataScienceSection'));
@@ -485,6 +485,40 @@ function Hero() {
       >
         <ArrowDown />
       </button>
+    </section>
+  );
+}
+
+function Courses({ state }) {
+  return (
+    <section className="section courses" id="courses">
+      <div className="heading centered">
+        <span className="eyebrow">NEXAVORA LEARNING PATHS</span>
+        <h2>Explore our <em>courses</em></h2>
+        <p>Course information is loaded from the Nexavora course catalogue.</p>
+      </div>
+      {state.loading && <p className="course-status" role="status">Loading courses...</p>}
+      {!state.loading && state.error && <p className="course-status error">{state.error}</p>}
+      {!state.loading && !state.error && state.courses.length === 0 && (
+        <p className="course-status">No published courses are available right now.</p>
+      )}
+      {!state.loading && !state.error && state.courses.length > 0 && (
+        <div className="course-grid">
+          {state.courses.map((course) => (
+            <article className="course-card" key={course.slug || course._id}>
+              <span className="eyebrow">{course.duration || 'Practical programme'}</span>
+              <h3>{course.title}</h3>
+              <p>{course.description}</p>
+              {Array.isArray(course.skills) && course.skills.length > 0 && (
+                <div className="course-tags">
+                  {course.skills.slice(0, 6).map((skill) => <span key={skill}>{skill}</span>)}
+                </div>
+              )}
+              <a className="button outline" href="#advisor">Talk to an advisor <ArrowRight /></a>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -1293,7 +1327,19 @@ function Widgets({ callback }) {
 
 export default function Home() {
   const [demo, setDemo] = useState(false);
+  const [coursesState, setCoursesState] = useState({ courses: [], loading: true, error: '' });
   const callback = () => document.getElementById('advisor')?.scrollIntoView({ behavior: 'smooth' });
+  useEffect(() => {
+    let active = true;
+    getJson('/courses')
+      .then((result) => {
+        if (active) setCoursesState({ courses: Array.isArray(result.courses) ? result.courses : [], loading: false, error: '' });
+      })
+      .catch((error) => {
+        if (active) setCoursesState({ courses: [], loading: false, error: error.message });
+      });
+    return () => { active = false; };
+  }, []);
   return (
     <div className="site" id="home">
       <Header onCallback={callback} />
@@ -1308,6 +1354,7 @@ export default function Home() {
         >
           <DataScienceSection />
         </Suspense>
+        <Courses state={coursesState} />
         <Hero />
         <Advisor />
         <Learning />

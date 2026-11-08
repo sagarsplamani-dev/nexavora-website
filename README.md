@@ -34,6 +34,8 @@ The chat requires an OpenAI-compatible provider configured on the API: set `AI_A
 - `POST /api/demo-bookings` stores demo requests.
 - `POST /api/contact` stores contact messages. `/api/contact-messages` is retained as an alias.
 - `POST /api/chat` proxies conversation messages to the configured OpenAI-compatible AI provider.
+- `GET /api/courses` returns published courses from MongoDB.
+- `GET /api/courses/:id` returns one published course by MongoDB ID or slug.
 
 All POST endpoints validate and constrain input, accept a honeypot field for basic bot filtering, and are rate-limited. Requests are limited to 16 KB. CORS allows the comma-separated origins in `CLIENT_URL`.
 
@@ -42,6 +44,7 @@ All POST endpoints validate and constrain input, accept a honeypot field for bas
 1. Create an Atlas project and cluster, then create a database user with a strong password.
 2. In Network Access, allow connections from the Render service's outbound IP ranges or another restricted network path supported by your plan. Avoid opening the database to all IPs unless you have explicitly assessed that risk.
 3. Copy the Atlas connection string and place it in Render as `MONGO_URI`. Replace its password placeholder in the Render dashboard only; never commit the credential.
+4. To add the initial course records without overwriting existing records, run `npm run seed:courses -w server` locally with `MONGO_URI` configured. The script inserts only missing `data-analytics` and `data-science` slugs.
 
 ### Render API
 1. Push the repository to GitHub without `.env` files or credentials. `.gitignore` excludes `.env`, `.env.*`, and dependency/build directories; verify no secrets were committed before pushing.
