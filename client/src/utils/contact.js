@@ -4,6 +4,8 @@ const whatsappDigits = (import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/
 
 export const phoneDisplay = import.meta.env.VITE_PHONE_DISPLAY || '9686712017';
 export const phoneHref = `tel:${phoneDigits}`;
+export const emailDisplay = import.meta.env.VITE_CONTACT_EMAIL || 'sagarsplamani@gmail.com';
+export const emailHref = `mailto:${emailDisplay}`;
 export const whatsappHref = whatsappDigits
   ? `https://wa.me/${whatsappDigits}?text=${defaultMessage}`
   : '';

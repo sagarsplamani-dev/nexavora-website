@@ -40,7 +40,7 @@ import {
   YAxis,
 } from 'recharts';
 import { submitForm } from '../services/api';
-import { mapsHref, phoneDisplay, phoneHref, whatsappHref } from '../utils/contact';
+import { emailDisplay, emailHref, mapsHref, phoneDisplay, phoneHref, whatsappHref } from '../utils/contact';
 import { downloadSyllabus } from '../utils/syllabus';
 const DataScienceSection = lazy(() => import('../sections/DataScienceSection'));
 
@@ -1068,6 +1068,9 @@ function Footer() {
           </a>
           <a className="footer-phone" href="tel:8792781059">
             <Phone /> 8792781059
+          </a>
+          <a className="footer-phone" href={emailHref}>
+            {emailDisplay}
           </a>
         </div>
         <div className="footer-links">
