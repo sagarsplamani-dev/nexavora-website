@@ -11,6 +11,8 @@ import demoBookingRoutes from './routes/demoBookingRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
+import Course from './models/Course.js';
+import { defaultCourses } from './utils/defaultCourses.js';
 
 const rootEnv = resolve(dirname(fileURLToPath(import.meta.url)), '../../.env');
 dotenv.config({ path: process.env.ENV_FILE || rootEnv });
@@ -44,7 +46,13 @@ if (process.env.MONGO_URI) {
   mongoose.connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 10000,
   })
-    .then(() => console.log('MongoDB connected'))
+    .then(async () => {
+      console.log('MongoDB connected');
+      await Promise.all(defaultCourses.map((course) => (
+        Course.updateOne({ slug: course.slug }, { $setOnInsert: course }, { upsert: true })
+      )));
+      console.log('Course catalogue checked without overwriting existing records');
+    })
     .catch((error) => console.error('MongoDB connection failed:', error.name || 'UnknownError'));
 } else {
   console.error('MONGO_URI is not configured. Database-backed submissions will remain unavailable.');

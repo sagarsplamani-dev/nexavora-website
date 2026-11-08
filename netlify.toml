@@ -4,6 +4,7 @@ publish = "client/dist"
 
 [build.environment]
 NODE_VERSION = "22"
+VITE_API_URL = "https://nexavora-website.onrender.com"
 
 [[redirects]]
 from = "/*"
