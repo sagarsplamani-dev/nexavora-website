@@ -896,6 +896,9 @@ function FAQ() {
 
 function DemoModal({ open, close }) {
   const [message, setMessage] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [coursesError, setCoursesError] = useState('');
   const {
     register,
     handleSubmit,
@@ -906,7 +909,7 @@ function DemoModal({ open, close }) {
       name: '',
       email: '',
       phone: '',
-      course: 'Data Science',
+      course: '',
       preferredDate: '',
       preferredTime: '',
       learningMode: 'Online',
@@ -926,6 +929,24 @@ function DemoModal({ open, close }) {
       document.body.classList.remove('modal-open');
     };
   }, [open, close]);
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setCoursesLoading(true);
+    setCoursesError('');
+    getJson('/courses')
+      .then((result) => {
+        const availableCourses = Array.isArray(result.courses) ? result.courses : [];
+        if (active) setCourses(availableCourses);
+      })
+      .catch((error) => {
+        if (active) setCoursesError(error.message);
+      })
+      .finally(() => {
+        if (active) setCoursesLoading(false);
+      });
+    return () => { active = false; };
+  }, [open]);
   if (!open) return null;
   const now = new Date();
   const minDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -998,11 +1019,22 @@ function DemoModal({ open, close }) {
           {errors.phone && <small className="error">{errors.phone.message}</small>}
           <label>
             Course
-            <select {...register('course', { required: 'Choose a course.' })}>
-              <option value="Data Science">Data Science</option>
-              <option value="Data Analytics">Data Analytics</option>
+            <select
+              disabled={coursesLoading || Boolean(coursesError)}
+              {...register('course', { required: 'Choose a course.' })}
+            >
+              <option value="">
+                {coursesLoading ? 'Loading courses...' : coursesError ? 'Courses unavailable' : 'Choose a course'}
+              </option>
+              {courses.map((course) => (
+                <option key={course.slug || course._id} value={course.title}>
+                  {course.title}
+                </option>
+              ))}
             </select>
           </label>
+          {coursesError && <small className="error">{coursesError}</small>}
+          {errors.course && <small className="error">Choose a course.</small>}
           <div className="two-col">
             <label>
               Preferred date
@@ -1031,7 +1063,7 @@ function DemoModal({ open, close }) {
             Learning mode
             <select {...register('learningMode')}>
               <option>Online</option>
-              <option>Classroom</option>
+              <option value="Classroom">Offline</option>
             </select>
           </label>
           <label>

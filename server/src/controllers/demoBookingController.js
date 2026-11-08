@@ -20,7 +20,7 @@ export const createDemoBooking = async (req, res) => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate) || Number.isNaN(parsedDate.getTime()) || parsedDate < today) return res.status(400).json({ error: 'Choose a valid date that is not in the past.' });
     const allowedTimes = ['10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM'];
-    if (!allowedTimes.includes(preferredTime) || !['Online', 'Classroom'].includes(learningMode)) return res.status(400).json({ error: 'Choose a valid time and learning mode.' });
+    if (!allowedTimes.includes(preferredTime) || !['Online', 'Classroom', 'Offline'].includes(learningMode)) return res.status(400).json({ error: 'Choose a valid time and learning mode.' });
     if (typeof message !== 'undefined' && typeof message !== 'string') return res.status(400).json({ error: 'Invalid message.' });
     const sanitized = {
       name: validator.trim(validator.stripLow(name)).slice(0, 80),
@@ -29,7 +29,7 @@ export const createDemoBooking = async (req, res) => {
       course,
       preferredDate: parsedDate,
       preferredTime,
-      learningMode,
+      learningMode: learningMode === 'Offline' ? 'Classroom' : learningMode,
       message: message ? validator.trim(validator.stripLow(message)).slice(0, 500) : '',
     };
     if (mongoose.connection.readyState !== 1) {
