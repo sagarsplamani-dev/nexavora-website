@@ -1,30 +1,28 @@
 const apiOrigin = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
 const apiBase = apiOrigin ? `${apiOrigin}/api` : '/api';
 
-export async function getJson(endpoint) {
+async function requestJson(endpoint, options) {
   let response;
   try {
-    response = await fetch(`${apiBase}${endpoint}`);
+    response = await fetch(`${apiBase}${endpoint}`, options);
   } catch {
-    throw new Error('Course services are unavailable. Confirm the API configuration.');
+    throw new Error(`Cannot reach the API at ${apiBase}. Start the backend locally or verify VITE_API_URL.`);
   }
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || 'Unable to load course information.');
+  if (!response.ok) {
+    throw new Error(result.error || `API request failed with HTTP ${response.status}.`);
+  }
   return result;
 }
 
+export async function getJson(endpoint) {
+  return requestJson(endpoint);
+}
+
 export async function submitForm(endpoint, payload) {
-  let response;
-  try {
-    response = await fetch(`${apiBase}${endpoint}`, {
+  return requestJson(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-  } catch {
-    throw new Error('Course services are unavailable. Confirm the API and database configuration.');
-  }
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || result.message || 'Request could not be completed.');
-  return result;
 }

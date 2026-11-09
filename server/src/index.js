@@ -25,9 +25,12 @@ const configuredOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? configuredOrigins
-  : [...new Set([...configuredOrigins, 'http://localhost:5173', 'http://127.0.0.1:5173'])];
+const knownOrigins = [
+  'https://flourishing-melba-fa7c5f.netlify.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+const allowedOrigins = [...new Set([...configuredOrigins, ...knownOrigins])];
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
