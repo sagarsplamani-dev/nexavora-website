@@ -18,15 +18,19 @@ const getTransporter = () => {
 
 export const sendMail = async ({ to, subject, html, text }) => {
   const mailTransport = getTransporter();
-  if (!mailTransport || !process.env.ADMIN_EMAIL || !to) return false;
+  if (!mailTransport || !to) {
+    console.warn('Email not sent: SMTP configuration or recipient is missing.');
+    return false;
+  }
   try {
     await mailTransport.sendMail({
-      from: `Nexavora Technologies LLP <${process.env.ADMIN_EMAIL}>`,
+      from: `Nexavora Technologies LLP <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
       text,
     });
+    console.log('Email sent successfully.');
     return true;
   } catch (err) {
     console.error('Email delivery failed:', err.code || 'SMTPError');
